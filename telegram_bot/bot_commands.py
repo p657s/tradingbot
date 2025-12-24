@@ -103,6 +103,8 @@ Hola {user.first_name}, ahora recibirás:
 <b>Comandos útiles:</b>
 /status - Ver tu estado
 /stats - Estadísticas del servicio
+/precio BTC - Consultar precios
+/markets - Resumen de mercados
 /unsubscribe - Cancelar suscripción
 /help - Ayuda
 
@@ -282,11 +284,16 @@ Usa /subscribe para comenzar a recibir señales.
 /stats - Estadísticas del servicio
 /help - Ver esta ayuda
 
+<b>Precios de Mercado:</b>
+/precio BTC - Ver precio de Bitcoin
+/precio ETH - Ver precio de Ethereum
+/markets - Resumen de mercados principales
+
 <b>Sobre las señales:</b>
 📊 Recibirás señales automáticamente cuando el sistema detecte oportunidades con alta confianza (70%+)
 
 🎯 Cada señal incluye:
-   • Tipo (BUY/SELL)
+   • Tipo (BUY/SELL con LONG/SHORT)
    • Precio de entrada
    • Stop Loss
    • Take Profit
@@ -307,6 +314,200 @@ Este bot solo envía SEÑALES, no ejecuta operaciones automáticamente. Tú deci
             message.strip(),
             parse_mode='HTML'
         )
+    
+    
+    async def cmd_precio(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """
+        Comando /precio - Consulta precio actual de cualquier criptomoneda
+        
+        Uso:
+            /precio BTC
+            /precio ETH
+            /precio SOL
+            /precio BNBUSDT
+        """
+        try:
+            # Obtener símbolo del comando
+            if not context.args:
+                await update.message.reply_text(
+                    "❌ <b>Uso incorrecto</b>\n\n"
+                    "Ejemplos:\n"
+                    "• <code>/precio BTC</code>\n"
+                    "• <code>/precio ETH</code>\n"
+                    "• <code>/precio SOL</code>\n"
+                    "• <code>/precio BNBUSDT</code>\n\n"
+                    "💡 Puedes usar símbolo corto (BTC) o completo (BTCUSDT)",
+                    parse_mode='HTML'
+                )
+                return
+            
+            # Construir símbolo
+            symbol_input = ''.join(context.args).upper()
+            
+            # Si no termina en USDT, agregarlo
+            if not symbol_input.endswith('USDT'):
+                symbol = f"{symbol_input}USDT"
+            else:
+                symbol = symbol_input
+            
+            # Obtener datos del mercado
+            binance_client = context.bot_data.get('binance_client')
+            
+            if not binance_client:
+                await update.message.reply_text("❌ Error: Cliente de Binance no disponible")
+                return
+            
+            # Obtener últimas 2 velas para calcular cambio
+            klines = binance_client.get_klines(symbol, '5m', 2)
+            
+            if not klines or len(klines) < 2:
+                await update.message.reply_text(
+                    f"❌ <b>Símbolo no encontrado</b>\n\n"
+                    f"'{symbol}' no está disponible en Binance Futures.\n\n"
+                    f"💡 Intenta con: BTC, ETH, SOL, BNB, ADA, DOGE, XRP",
+                    parse_mode='HTML'
+                )
+                return
+            
+            # Datos actuales (formato lista)
+            # [timestamp, open, high, low, close, volume]
+            current = klines[-1]
+            previous = klines[-2]
+            
+            price = float(current[4])  # close
+            high_24h = float(current[2])  # high
+            low_24h = float(current[3])  # low
+            volume = float(current[5])  # volume
+            
+            # Calcular cambio porcentual
+            prev_close = float(previous[4])
+            price_change = ((price - prev_close) / prev_close) * 100
+            
+            # Emoji según tendencia
+            if price_change > 0:
+                emoji = "🟢"
+                trend = "↗️"
+            elif price_change < 0:
+                emoji = "🔴"
+                trend = "↘️"
+            else:
+                emoji = "🟡"
+                trend = "➡️"
+            
+            # Formatear timestamp
+            timestamp = datetime.fromtimestamp(current[0] / 1000)
+            
+            # Formatear mensaje
+            message = f"""
+{emoji} <b>PRECIO {symbol}</b>
+
+━━━━━━━━━━━━━━━━━━━━
+💰 <b>Precio Actual:</b> ${price:,.2f}
+{trend} <b>Cambio 5min:</b> {price_change:+.2f}%
+
+━━━━━━━━━━━━━━━━━━━━
+📈 <b>Máximo:</b> ${high_24h:,.2f}
+📉 <b>Mínimo:</b> ${low_24h:,.2f}
+📊 <b>Volumen:</b> {volume:,.0f}
+
+━━━━━━━━━━━━━━━━━━━━
+🕐 {timestamp.strftime('%H:%M:%S')}
+
+💡 <i>Datos en tiempo real de Binance Futures</i>
+"""
+            
+            await update.message.reply_text(message, parse_mode='HTML')
+            
+            logger.info(f"💰 Usuario {update.effective_user.id} consultó precio de {symbol}")
+            
+        except Exception as e:
+            logger.error(f"Error en comando /precio: {e}", exc_info=True)
+            await update.message.reply_text(
+                "❌ <b>Error consultando precio</b>\n\n"
+                "Intenta con otro símbolo o contacta soporte.",
+                parse_mode='HTML'
+            )
+    
+    
+    async def cmd_markets(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """
+        Comando /markets - Muestra resumen de múltiples mercados
+        
+        Uso: /markets o /mercados
+        """
+        try:
+            # Símbolos principales - TOP 20
+            symbols = [
+                'BTCUSDT',   # Bitcoin
+                'ETHUSDT',   # Ethereum
+                'BNBUSDT',   # Binance Coin
+                'SOLUSDT',   # Solana
+                'XRPUSDT',   # Ripple
+                'ADAUSDT',   # Cardano
+                'DOGEUSDT',  # Dogecoin
+                'AVAXUSDT',  # Avalanche
+                'DOTUSDT',   # Polkadot
+                'MATICUSDT', # Polygon
+                'LINKUSDT',  # Chainlink
+                'UNIUSDT',   # Uniswap
+                'LTCUSDT',   # Litecoin
+                'ATOMUSDT',  # Cosmos
+                'ETCUSDT',   # Ethereum Classic
+                'NEARUSDT',  # Near Protocol
+                'APTUSDT',   # Aptos
+                'ARBUSDT',   # Arbitrum
+                'OPUSDT',    # Optimism
+                'INJUSDT'    # Injective
+            ]
+            
+            binance_client = context.bot_data.get('binance_client')
+            
+            if not binance_client:
+                await update.message.reply_text("❌ Error: Cliente de Binance no disponible")
+                return
+            
+            message = "📊 <b>RESUMEN DE MERCADOS</b>\n\n"
+            message += "━━━━━━━━━━━━━━━━━━━━\n"
+            
+            for symbol in symbols:
+                try:
+                    klines = binance_client.get_klines(symbol, '5m', 2)
+                    
+                    if klines and len(klines) >= 2:
+                        current = klines[-1]
+                        previous = klines[-2]
+                        
+                        # [timestamp, open, high, low, close, volume]
+                        price = float(current[4])  # close
+                        prev_close = float(previous[4])  # close anterior
+                        change = ((price - prev_close) / prev_close) * 100
+                        
+                        if change > 0:
+                            emoji = "🟢"
+                        elif change < 0:
+                            emoji = "🔴"
+                        else:
+                            emoji = "🟡"
+                        
+                        # Formatear nombre corto
+                        short_name = symbol.replace('USDT', '')
+                        
+                        message += f"{emoji} <b>{short_name}</b>: ${price:,.2f} ({change:+.2f}%)\n"
+                    
+                except Exception as e:
+                    logger.error(f"Error obteniendo {symbol}: {e}")
+                    continue
+            
+            message += "\n━━━━━━━━━━━━━━━━━━━━\n"
+            message += "💡 <i>Para más detalles usa: /precio BTC</i>"
+            
+            await update.message.reply_text(message, parse_mode='HTML')
+            
+            logger.info(f"📊 Usuario {update.effective_user.id} consultó mercados")
+            
+        except Exception as e:
+            logger.error(f"Error en comando /markets: {e}", exc_info=True)
+            await update.message.reply_text("❌ Error consultando mercados")
     
     
     async def cmd_broadcast(self, update: Update, context: ContextTypes.DEFAULT_TYPE):

@@ -107,7 +107,7 @@ class TradingParams:
     # ========================================================================
     
     # Confianza mínima para ENVIAR una señal
-    MIN_CONFIDENCE = 0.70  # Solo envía señales con 70%+ confianza
+    MIN_CONFIDENCE = 0.50  # Solo envía señales con 70%+ confianza
     
     # Volumen mínimo requerido para validar señal
     MIN_VOLUME_RATIO = 1.5  # Volumen debe ser 1.5x el promedio

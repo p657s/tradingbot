@@ -1,0 +1,16 @@
+{
+  "BTCUSDT_1766613509": {
+    "signal_id": "BTCUSDT_1766613509",
+    "symbol": "BTCUSDT",
+    "type": "SELL",
+    "price": 87612.7,
+    "confidence": 0.55,
+    "stop_loss": 87646.81,
+    "take_profit": 87561.53,
+    "atr": 17.06,
+    "risk_reward": 1.5,
+    "timestamp": "2025-12-24T16:58:29.810432",
+    "status": "ACTIVE",
+    "created_at": "2025-12-24T16:58:29.810432"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "ETHUSDT_1766617400": {
+    "signal_id": "ETHUSDT_1766617400",
+    "symbol": "ETHUSDT",
+    "type": "SELL",
+    "price": 2953.54,
+    "confidence": 0.6,
+    "stop_loss": 2957.62,
+    "take_profit": 2947.42,
+    "atr": 2.04,
+    "risk_reward": 1.5,
+    "timestamp": "2025-12-24T18:03:20.512711",
+    "status": "ACTIVE",
+    "created_at": "2025-12-24T18:03:20.512711"
+  },
+  "SOLUSDT_1766617401": {
+    "signal_id": "SOLUSDT_1766617401",
+    "symbol": "SOLUSDT",
+    "type": "SELL",
+    "price": 122.99,
+    "confidence": 0.6,
+    "stop_loss": 123.17,
+    "take_profit": 122.71,
+    "atr": 0.09,
+    "risk_reward": 1.5,
+    "timestamp": "2025-12-24T18:03:21.466421",
+    "status": "ACTIVE",
+    "created_at": "2025-12-24T18:03:21.466421"
+  },
+  "BTCUSDT_1766617437": {
+    "signal_id": "BTCUSDT_1766617437",
+    "symbol": "BTCUSDT",
+    "type": "SELL",
+    "price": 87768.6,
+    "confidence": 0.6,
+    "stop_loss": 87872.1,
+    "take_profit": 87613.34,
+    "atr": 51.75,
+    "risk_reward": 1.5,
+    "timestamp": "2025-12-24T18:03:57.355787",
+    "status": "ACTIVE",
+    "created_at": "2025-12-24T18:03:57.355787"
+  }
+}

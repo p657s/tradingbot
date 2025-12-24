@@ -265,9 +265,9 @@ class TechnicalIndicators:
             # > 1.5 = Alto volumen (confirma señales)
             df['volume_ratio'] = df['volume'] / df['volume_ma']
             
-            # Reemplazar NaN e infinitos
-            df['volume_ratio'].fillna(1.0, inplace=True)
-            df['volume_ratio'].replace([np.inf, -np.inf], 1.0, inplace=True)
+            # Reemplazar NaN e infinitos (SIN inplace=True)
+            df['volume_ratio'] = df['volume_ratio'].fillna(1.0)
+            df['volume_ratio'] = df['volume_ratio'].replace([np.inf, -np.inf], 1.0)
             
             logger.debug("  ✓ Análisis de volumen calculado")
             
@@ -350,10 +350,10 @@ class TechnicalIndicators:
             # Positivo = alcista, Negativo = bajista
             df['momentum'] = df['close'] - df['close'].shift(4)
             
-            # Reemplazar NaN
-            df['price_change'].fillna(0, inplace=True)
-            df['price_change_ma'].fillna(0, inplace=True)
-            df['momentum'].fillna(0, inplace=True)
+            # Reemplazar NaN (SIN inplace=True)
+            df['price_change'] = df['price_change'].fillna(0)
+            df['price_change_ma'] = df['price_change_ma'].fillna(0)
+            df['momentum'] = df['momentum'].fillna(0)
             
             logger.debug("  ✓ Price action calculado")
             

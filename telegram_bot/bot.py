@@ -23,7 +23,7 @@ class TelegramBot:
     - Coordinar con SubscriberManager y SignalGenerator
     """
     
-    def __init__(self, bot_token: str, subscriber_manager, signal_generator):
+    def __init__(self, bot_token: str, subscriber_manager, signal_generator, binance_client):
         """
         Inicializa el bot de Telegram
         
@@ -31,10 +31,12 @@ class TelegramBot:
             bot_token: Token del bot de Telegram
             subscriber_manager: Instancia de SubscriberManager
             signal_generator: Instancia de SignalGenerator
+            binance_client: Instancia de BinanceClient ← AGREGADO
         """
         self.token = bot_token
         self.subscribers = subscriber_manager
         self.signals = signal_generator
+        self.binance_client = binance_client  # ← LÍNEA NUEVA
         self.app = None
         self.commands = None
         
@@ -56,6 +58,9 @@ class TelegramBot:
             
             # Inicializar comandos
             self.commands = BotCommands(self.subscribers, self.signals)
+            
+            # Guardar binance_client en bot_data para que los comandos puedan acceder ← LÍNEA NUEVA
+            self.app.bot_data['binance_client'] = self.binance_client
             
             # Registrar handlers de comandos
             self._register_handlers()
@@ -110,6 +115,8 @@ class TelegramBot:
         - /status: Ver tu estado
         - /stats: Estadísticas del servicio
         - /help: Ayuda
+        - /precio: Consultar precio ← NUEVO
+        - /markets: Ver resumen de mercados ← NUEVO
         """
         # Comandos básicos
         self.app.add_handler(
@@ -129,6 +136,20 @@ class TelegramBot:
         )
         self.app.add_handler(
             CommandHandler("help", self.commands.cmd_help)
+        )
+        
+        # ← COMANDOS NUEVOS DE PRECIOS
+        self.app.add_handler(
+            CommandHandler("precio", self.commands.cmd_precio)
+        )
+        self.app.add_handler(
+            CommandHandler("price", self.commands.cmd_precio)
+        )
+        self.app.add_handler(
+            CommandHandler("markets", self.commands.cmd_markets)
+        )
+        self.app.add_handler(
+            CommandHandler("mercados", self.commands.cmd_markets)
         )
         
         # Comandos administrativos (si se implementan)

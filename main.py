@@ -1,17 +1,7 @@
-"""
-Sistema de Señales de Trading Multi-Usuario
-Punto de entrada principal del sistema
-
-Este bot:
-- Analiza mercados de criptomonedas en tiempo real
-- Genera señales de trading con IA
-- Envía notificaciones automáticas a usuarios suscritos vía Telegram
-- Monitorea resultados de señales
-- NO ejecuta operaciones automáticamente
-"""
 
 import asyncio
 import sys
+from typing import Dict
 from utils import setup_logger
 from config.config import Config
 from config.trading_params import TradingParams
@@ -21,7 +11,7 @@ from subscribers.subscriber_manager import SubscriberManager
 from subscribers.signal_distributor import SignalDistributor
 from core.signal_generator import SignalGenerator
 from telegram_bot.bot import TelegramBot
-from typing import Dict
+
 
 # Configurar logger
 logger = setup_logger()
@@ -63,32 +53,39 @@ class TradingSignalService:
             logger.error(str(e))
             sys.exit(1)
         
-        # 3. Inicializar componentes
+        # 3. Inicializar componentes EN ORDEN CORRECTO
         logger.info("\n📦 Inicializando componentes...")
         
-        # Binance Client
+        # PRIMERO: Binance Client
+        logger.info("  🔗 Binance Client...")
         self.binance = BinanceClient()
         
         # Estrategia de scalping
+        logger.info("  🎯 Scalping Strategy...")
         self.strategy = ScalpingStrategy()
         
         # Gestor de suscriptores
+        logger.info("  👥 Subscriber Manager...")
         self.subscribers = SubscriberManager()
         
         # Distribuidor de señales
+        logger.info("  📡 Signal Distributor...")
         self.distributor = SignalDistributor(
             Config.TELEGRAM_BOT_TOKEN,
             self.subscribers
         )
         
         # Generador de señales
+        logger.info("  ⚡ Signal Generator...")
         self.signal_gen = SignalGenerator(self.binance, self.strategy)
         
-        # Bot de Telegram
+        # ÚLTIMO: Bot de Telegram (necesita binance)
+        logger.info("  🤖 Bot de Telegram...")
         self.telegram = TelegramBot(
             Config.TELEGRAM_BOT_TOKEN,
             self.subscribers,
-            self.signal_gen
+            self.signal_gen,
+            self.binance  # ← Ahora sí existe
         )
         
         logger.info("✅ Todos los componentes inicializados")
